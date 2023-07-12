@@ -56,10 +56,6 @@ inputs:
     description: "version name"
     required: false
     default: "1.0.0"
-  version-number:
-    description: "version number"
-    required: false
-    default: ${{ github.run_number }}
   slack-token:
     description: "slack token"
     required: true
@@ -114,7 +110,7 @@ runs:
         echo versionCode=${{ inputs.version-code }} >> ${{ inputs.build-properties }}
         echo versionName=${{ inputs.version-name }} >> ${{ inputs.build-properties }}
       shell: bash
-    - run: flutter build apk --build-name=${{ inputs.version-name }} --build-number=${{ inputs.version-number }} --release
+    - run: flutter build apk --build-name=${{ inputs.version-name }} --build-number=${{ inputs.version-code }} --release
       shell: bash
     - uses: 8398a7/action-slack@v3
       with:
