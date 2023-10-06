@@ -69,8 +69,18 @@ inputs:
     description: "apk path"
     required: false
     default: "build/app/outputs/flutter-apk"
+  aab-path:
+    description: "aab path"
+    required: false
+    default: "build/app/outputs/bundle/release"
   apk-name:
     description: "apk name"
+    required: true
+  aab-name:
+    description: "aab name"
+    required: true
+  artifact-name:
+    description: "artifact name"
     required: true
 runs:
   using: "composite"
@@ -110,7 +120,9 @@ runs:
         echo versionCode=${{ inputs.version-code }} >> ${{ inputs.build-properties }}
         echo versionName=${{ inputs.version-name }} >> ${{ inputs.build-properties }}
       shell: bash
-    - run: flutter build apk --build-name=${{ inputs.version-name }} --build-number=${{ inputs.version-code }} --release
+    - run: |
+        flutter build apk --build-name=${{ inputs.version-name }} --build-number=${{ inputs.version-code }} --release
+        flutter build appbundle --build-name=${{ inputs.version-name }} --build-number=${{ inputs.version-code }} --release
       shell: bash
     - uses: 8398a7/action-slack@v3
       with:
@@ -120,15 +132,18 @@ runs:
         SLACK_WEBHOOK_URL: ${{ inputs.slack-webhook-url }}
       if: always()
     - name: Change File Name
-      run: mv ${{ inputs.apk-path }}/app-release.apk ${{ inputs.apk-path }}/${{ inputs.apk-name }}
+      run: |
+        mkdir artifacts
+        mv ${{ inputs.apk-path }}/app-release.apk artifacts/${{ inputs.apk-name }}
+        mv ${{ inputs.aab-path }}/app.aab         artifacts/${{ inputs.aab-name }}
       shell: bash
     - uses: actions/upload-artifact@v3
       with:
-        name: ${{ inputs.apk-name }}
-        path: ${{ inputs.apk-path }}/*.apk
+        name: ${{ inputs.artifact-name }}
+        path: artifacts/*.*
     - name: Slack Upload Artifacts
       uses: MeilCli/slack-upload-file@v3
       with:
         slack_token: ${{ inputs.slack-token }}
         channel_id: ${{ inputs.slack-channel-id }}
-        file_path: '${{ inputs.apk-path }}/${{ inputs.apk-name }}'
+        file_path: 'artifacts/*.*'
