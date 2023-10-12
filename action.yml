@@ -73,15 +73,13 @@ inputs:
     description: "aab path"
     required: false
     default: "build/app/outputs/bundle/release"
-  apk-name:
-    description: "apk name"
-    required: true
-  aab-name:
-    description: "aab name"
-    required: true
   artifact-name:
     description: "artifact name"
     required: true
+  artifact-path:
+    description: "artifact path"
+    required: false
+    default: "artifacts"
 runs:
   using: "composite"
   steps:
@@ -133,17 +131,17 @@ runs:
       if: always()
     - name: Change File Name
       run: |
-        mkdir artifacts
-        mv ${{ inputs.apk-path }}/app-release.apk artifacts/${{ inputs.apk-name }}
-        mv ${{ inputs.aab-path }}/app-release.aab         artifacts/${{ inputs.aab-name }}
+        mkdir ${{ inputs.artifact-path }}
+        mv ${{ inputs.apk-path }}/app-release.apk ${{ inputs.artifact-path }}/${{ inputs.artifact-name }}.apk
+        mv ${{ inputs.aab-path }}/app-release.aab ${{ inputs.artifact-path }}/${{ inputs.artifact-name }}.aab
       shell: bash
     - uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.artifact-name }}
-        path: artifacts/*.*
+        path: ${{ inputs.artifact-path }}/*.*
     - name: Slack Upload Artifacts
       uses: MeilCli/slack-upload-file@v3
       with:
         slack_token: ${{ inputs.slack-token }}
         channel_id: ${{ inputs.slack-channel-id }}
-        file_path: 'artifacts/*.*'
+        file_path: '${{ inputs.artifact-path }}/*.*'
